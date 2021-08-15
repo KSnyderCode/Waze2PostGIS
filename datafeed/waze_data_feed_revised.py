@@ -30,7 +30,6 @@ License:    <Permission is hereby granted, free of charge, to any person obtaini
 #note that "requests" is not a base module and will need to be installed with Conda (or whatever you use)
 import datetime
 import json
-from typing import Counter
 import requests
 import psycopg2
 from psycopg2 import Error
