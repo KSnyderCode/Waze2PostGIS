@@ -145,13 +145,9 @@ def alertsCall():
                     confidence,
                     reliability,
                     no_thumbsup)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""", (time_stamp, geom, magvar,
-                                                                                             alert_type, subtype,
-                                                                                             report_description, street,
-                                                                                             city, country, road_type,
-                                                                                             report_rating,
-                                                                                             uuid, confidence,
-                                                                                             reliability, no_thumbsup))
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+                    (time_stamp, geom, magvar, alert_type, subtype, report_description, street,
+                    city, country, road_type, report_rating, uuid, confidence,reliability, no_thumbsup))
             counter += 1
         except (Exception, Error) as error:
             print("Error while executing SQL insert: ", error)
@@ -398,9 +394,9 @@ def irregularitiesCall():
                     no_thumbsup)
                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
                            , (id, geom, detection_date, update_date, irregularity_type, start_node, end_node, speed,
-                              speed_mph,
-                              delay_seconds, delay_minutes, jam_length, jam_length_ft, jam_trend, street, city, country,
-                              jam_severity, jam_level, highway, drivers_count, alerts_count, no_thumbsup))
+                              speed_mph, delay_seconds, delay_minutes, jam_length, jam_length_ft, jam_trend, street,
+                              city, country, jam_severity, jam_level, highway, drivers_count, alerts_count,
+                              no_thumbsup))
             counter += 1
         except (Exception, Error) as error:
             print("Error while executing SQL insert: ", error)
