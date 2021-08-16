@@ -6,10 +6,10 @@ API Call for Waze For Cities Data Feed and inserts into PostGIS Enabled Database
 This project is meant to serve to download data from the Waze For Cities datafeed and insert into tables within a PostGIS enabled database. This will allow for integration with desktop-based GIS software. The SQL script will create the schema, tables, indexes, and set the timezone for the database. 
 
 The general overview of the repository is as follows:
--Create Postgres Database (manually)
--Run database initialization script
--Run the datafeed script through CRON every X minutes. 
--Run the duplicate removal script through CRON every X+1 minutes. 
+1. Create Postgres Database (manually)
+2. Run database initialization script
+3. Run the datafeed script through CRON every X minutes. 
+4. Run the duplicate removal script through CRON every X+1 minutes. 
 
 ## Python Packages Required
 
