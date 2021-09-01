@@ -11,12 +11,17 @@ semantic versioning as possible.
 2. Create a Microsoft SQL Server version to increase compatible software
 3. Drop psycopg2 and use an Object Relational Mapper (ORM) like SQLAlchemy
 
-## [0.1.2] -2021-08-16
+## [0.2.0] -2021-09-01
 ### Added
 - Created changelog and assigned minor versions
+- Added logging functionality to output to "waze_ingestion.log"
 
 ### Changed
-- Moved future feature wishlist to the changelog in the "Unreleased" feature section 
+- Moved future feature wishlist to the changelog in the "Unreleased" feature section
+- Cleaned up some formatting, removed extra white space
+
+### Removed
+- Removed all print statements from program
 
 ## [0.1.1] -2021-08-16
 ### Changed
