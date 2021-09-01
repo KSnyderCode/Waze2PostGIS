@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# waze_duplciate_removal.py
+# reindexing.py
 # Copyright 2021 Tri-County Regional Planning Commission
 
 
