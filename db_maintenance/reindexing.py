@@ -6,25 +6,29 @@
 
 
 ''' import modules / packages '''
-import datetime
+import logging
 import psycopg2
 from psycopg2 import Error
 
+''' variables '''
+#establishing logging config
+logging.basicConfig(filename ='reindexing.log',
+                    level = logging.INFO,
+                    filemode ='a',
+                    format = '%(asctime)s:%(levelname)s:%(message)s')
+
 ''' defining functions '''
 
-#creates variables for starting a timestamp
-def ts_start():
-    global execute_time
-    execute_time = datetime.datetime.now()
-    print("Initiating CRUD Operations \nCurrent time: ", execute_time)
+# logs the execution of the script
+def prog_start():
+    logging.info("Initiating data ingestion & CRUD operations.")
 
-#calculates elapsed time and prints timestamp
-def ts_end():
-    elapsed_time = datetime.datetime.now() - execute_time
-    print("\nTime to execute program: ", elapsed_time)
+# logs the completion of the script
+def prog_end():
+    logging.info("Program operations completed.")
 
 def success(schema):
-    print("SUCCESS:","All indexes in schema:", schema, "are re-indexed." )
+    logging.info("SUCCESS:","All indexes in {} are re-indexed.".format(schema))
 
 #establishes connection to postgis database with an autocommit connection
 def db_connection():
@@ -41,13 +45,12 @@ def db_connection():
         global cursor 
         cursor = connection.cursor()
         # print database information after connection established
-        print("Successfully connected to Database.\n")
+        logging.info("Successfully connected to Database.")
     except (Exception, Error) as error:
-        print('exception given')
-        print("Error while connecting to Irregularities Table in PostgreSQL", error)
+        logging.error("Error while connecting to PostgreSQL: {}".format(error))
         cursor.close()
-        connection.close()            
-        print("PostgreSQL Connection is closed")
+        connection.close()
+        logging.error("PostgreSQL Connection closed due to connection error")
 
 # reindexes the created schema named w4c
 def w4c_idx():
@@ -55,25 +58,25 @@ def w4c_idx():
         cursor.execute("""REINDEX SCHEMA w4c;""")
         success("w4c")   
     except (Exception, Error) as error:
-        print("Error while executing Alert re-indexing: ", error)
+        logging.error("Error while executing Alert re-indexing: {}".format(error))
         cursor.close()
         connection.close()
-        print("PostgreSQL Connection for Alerts Table is closed")
+        logging.error("PostgreSQL Connection for Alerts Table is closed")
 
 #closes postgresql connection       
 def db_close():
     #write changes to database, close cursor command, and close out database connection
     cursor.close()
     connection.close()
-    print("Changes commmitted to database and connection closed.")
+    logging.info("Changes commmitted to database and connection closed.")
 
 ''' defining main '''
 def main():
-    ts_start()
+    prog_start()
     db_connection()
     w4c_idx()
     db_close()
-    ts_end()
+    prog_end()
 
 ''' main execution '''
 if __name__ == "__main__":

@@ -4,27 +4,28 @@
 # waze_duplciate_removal.py
 # Copyright 2021 Tri-County Regional Planning Commission
 
-
 ''' import modules / packages'''
-import datetime
+import logging
 import psycopg2
 from psycopg2 import Error
 
+''' variables '''
+#establishing logging config
+logging.basicConfig(filename ='duplicate_removal.log',
+                    level = logging.INFO,
+                    filemode ='a',
+                    format = '%(asctime)s:%(levelname)s:%(message)s')
+
+
 ''' defining functions '''
 
+# logs the execution of the script
+def prog_start():
+    logging.info("Initiating data ingestion & CRUD operations.")
 
-# creates variables for starting a timestamp
-def ts_start():
-    global execute_time
-    execute_time = datetime.datetime.now()
-    print("Initiating CRUD Operations \nCurrent time: ", execute_time)
-
-
-# calculates elapsed time and prints timestamp
-def ts_end():
-    elapsed_time = datetime.datetime.now() - execute_time
-    print("\nTime to execute program: ", elapsed_time)
-
+# logs the completion of the script
+def prog_end():
+    logging.info("Program operations completed.")
 
 # establishes connection to postgis database with an autocommit connection
 def db_connection():
@@ -36,19 +37,16 @@ def db_connection():
                                       host="localhost / ip address",
                                       port="5432",
                                       database="db_name")
-
         # creating global cursor for database operations
         global cursor
         cursor = connection.cursor()
         # print database information after connection established
-        print("Successfully connected to Database.\n")
+        logging.info("Successfully connected to Database.")
     except (Exception, Error) as error:
-        print('exception given')
-        print("Error while connecting to Irregularities Table in PostgreSQL", error)
+        logging.error("Error while connecting to PostgreSQL: {}".format(error))
         cursor.close()
         connection.close()
-        print("PostgreSQL Connection is closed")
-
+        logging.error("PostgreSQL Connection closed due to connection error")
 
 # deletes duplicate out of the database by comparing virtual twins
 #  of the database tables and keeping the lower primary key value
@@ -61,13 +59,12 @@ def alert_duplicate():
             WHERE
                 a.pk > b.pk
                 AND a.uuid = b.uuid;""")
-        print("SUCCESSFUL: Duplicates removed from Alert table.\n")
+        logging.info("SUCCESSFUL: Duplicates removed from Alert table.")
     except (Exception, Error) as error:
-        print("Error while executing Alert Duplicate Removal: ", error)
+        logging.error("Error while executing Alert Duplicate Removal: {}".format(error))
         cursor.close()
         connection.close()
-        print("PostgreSQL Connection for Alerts Table is closed")
-
+        logging.error("PostgreSQL Connection for Alerts Table is closed")
 
 def jam_duplicate():
     try:
@@ -78,12 +75,12 @@ def jam_duplicate():
             WHERE
 	            a.pk > b.pk
 	            AND a.uuid = b.uuid;""")
-        print("SUCCESSFUL: Duplicates removed from Jam table.\n")
+        logging.info("SUCCESSFUL: Duplicates removed from Jam table.")
     except (Exception, Error) as error:
-        print("ERROR while executing Jam Duplicate Removal: ", error)
+        logging.error("ERROR while executing Jam Duplicate Removal: {}".format(error))
         cursor.close()
         connection.close()
-        print("PostgreSQL Connection for Detected Jam Table is closed")
+        logging.error("PostgreSQL Connection for Detected Jam Table is closed")
 
 
 # commits changes to database and closes database connection
@@ -92,19 +89,17 @@ def db_commit():
     connection.commit()
     cursor.close()
     connection.close()
-    print("Changes commmitted to database and connection closed.")
-
+    logging.info("Changes commmitted to database and connection closed.")
 
 ''' defining main '''
 
-
 def main():
-    ts_start()
+    prog_start()
     db_connection()
     alert_duplicate()
     jam_duplicate()
     db_commit()
-    ts_end()
+    prog_end()
 
 
 ''' main execution '''

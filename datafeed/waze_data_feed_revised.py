@@ -54,7 +54,7 @@ def db_connection():
         logging.info("Successfully connected to Database.")
         return connection, cursor
     except (Exception, Error) as error:
-        logging.error("Error while connecting to Irregularities Table in PostgreSQL: {}".format(error))
+        logging.error("Error while connecting to PostgreSQL: {}".format(error))
         cursor.close()
         connection.close()
         logging.error("PostgreSQL Connection closed due to connection error")
