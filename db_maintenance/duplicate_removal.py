@@ -11,7 +11,7 @@ from psycopg2 import Error
 
 ''' variables '''
 #establishing logging config
-logging.basicConfig(filename ='waze_ingestion.log',
+logging.basicConfig(filename ='duplicate_removal.log',
                     level = logging.INFO,
                     filemode ='a',
                     format = '%(asctime)s:%(levelname)s:%(message)s')
