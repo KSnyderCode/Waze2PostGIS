@@ -9,24 +9,30 @@
 # note that "requests" is not a base module and will need to be installed with Conda (or whatever you use)
 import datetime
 import json
+import logging
 import requests
 import psycopg2
 from psycopg2 import Error
 
+''' variables '''
+
+logging.basicConfig(filename ='waze_ingestion.log',
+                    encoding = 'utf-8',
+                    level = logging.INFO,
+                    filemode ='a',
+                    format = '%(asctime)s:%(message)s')
+
 ''' define functions '''
 
 
-# creates variables for starting a timestamp
-def ts_start():
-    global execute_time
-    execute_time = datetime.datetime.now()
-    print("Initiating CRUD Operations \nCurrent time: ", execute_time)
+# logs the execution of the script
+def prog_start():
+    logging.info("Initiating data ingestion & CRUD operations.")
 
 
-# calculates elapsed time and prints timestamp
-def ts_end():
-    elapsed_time = datetime.datetime.now() - execute_time
-    print("\nTime to execute program: ", elapsed_time)
+# logs the completion of the script
+def prog_end():
+    logging.info("Program operations completed.")
 
 
 # converts api response into json and then into a python dictionary
@@ -51,35 +57,34 @@ def db_connection():
         # creating global cursor for database operations
         global cursor
         cursor = connection.cursor()
-        # print database information after connection established
-        print("Successfully connected to Database.\n")
+        # logs success statement after connection established
+        logging.info("Successfully connected to Database.\n")
         return connection, cursor
     except (Exception, Error) as error:
-        print('EXCEPTION GIVEN DURING CONNECTION')
-        print("Error while connecting to Irregularities Table in PostgreSQL", error)
+        logging.error("Error while connecting to Irregularities Table in PostgreSQL", error)
         cursor.close()
         connection.close()
-        print("PostgreSQL Connection is closed")
+        logging.error("PostgreSQL Connection closed due to connection error")
 
 
-# prints a completed statement with the count of records insert into database
+# logs a completed statement with the count of records insert into database
 def commit_statement(table, counter):
-    print(table.title(), "updated. Count: ", counter, "\n")
+    logging.info(table.title(), "updated. Count: ", counter, "\n") #double-check syntax for logging
 
 
 def db_connection_close():
     # close cursor command, and close out database connection
     cursor.close()
     connection.close()
-    print("All updates commmitted to database and connection closed.")
+    logging.info("All updates commmitted to database and connection closed.")
 
 
 # function for when exceptions are raised to close out DB connection
 def db_exception(table):
-    print('EXCEPTION GIVEN DURING CONNECTION')
+    logging.error('EXCEPTION GIVEN DURING CONNECTION')
     cursor.close()
     connection.close()
-    print("PostgreSQL Connection to", table.upper(), "is closed")
+    logging.error("PostgreSQL Connection to", table.upper(), "is closed") #double-check logging syntax
 
 
 # calls waze datafeed api and puts point data into postgres table called alerts
@@ -150,7 +155,7 @@ def alertsCall():
                     city, country, road_type, report_rating, uuid, confidence,reliability, no_thumbsup))
             counter += 1
         except (Exception, Error) as error:
-            print("Error while executing SQL insert: ", error)
+            logging.error("Error while executing SQL insert: ", error) #double-check logging syntax
             db_exception("alerts")
     commit_statement("alerts", counter)
 
@@ -256,7 +261,7 @@ def jamsCall():
                     turn_line, turn_type))
             counter += 1
         except (Exception, Error) as error:
-            print("Error while executing SQL insert: ", error)
+            logging.error("Error while executing SQL insert: ", error) #double-check logging syntax
             db_exception("detected jams")
     commit_statement("jams", counter)
 
@@ -399,26 +404,26 @@ def irregularitiesCall():
                               no_thumbsup))
             counter += 1
         except (Exception, Error) as error:
-            print("Error while executing SQL insert: ", error)
+            logging.error("Error while executing SQL insert: ", error) #double-check logging syntax
             db_exception("irregularities")
 
         commit_statement("irregularities", counter)
 
     except:
-        print("No irregularities detected.\n")
+        logging.info("No irregularities detected.\n")
 
 
 ''' defining main '''
 
 
 def main():
-    ts_start()
+    prog_start()
     db_connection()
     alertsCall()
     jamsCall()
     irregularitiesCall()
     db_connection_close()
-    ts_end()
+    prog_end()
 
 
 ''' main execution '''
