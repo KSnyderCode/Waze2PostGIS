@@ -4,9 +4,7 @@
 # waze_data_feed.py
 # Copyright 2021 Tri-County Regional Planning Commission
 
-
 ''' import modules / packages '''
-# note that "requests" is not a base module and will need to be installed with Conda (or whatever you use)
 import datetime
 import json
 import logging
@@ -15,25 +13,21 @@ import psycopg2
 from psycopg2 import Error
 
 ''' variables '''
-
+#establishing logging config
 logging.basicConfig(filename ='waze_ingestion.log',
-                    encoding = 'utf-8',
                     level = logging.INFO,
                     filemode ='a',
-                    format = '%(asctime)s:%(message)s')
+                    format = '%(asctime)s:%(levelname)s:%(message)s')
 
 ''' define functions '''
-
 
 # logs the execution of the script
 def prog_start():
     logging.info("Initiating data ingestion & CRUD operations.")
 
-
 # logs the completion of the script
 def prog_end():
     logging.info("Program operations completed.")
-
 
 # converts api response into json and then into a python dictionary
 def json_to_dict(url):
@@ -42,54 +36,49 @@ def json_to_dict(url):
     global responseAsDict
     responseAsDict = json.loads(responseAsJson)
 
-
 # establishes connection to postgis database with an autocommit connection
 def db_connection():
     try:
         # global connection to PostgreSQL database
         global connection
         connection = psycopg2.connect(user="user",
-                                      password="password",
-                                      host="localhost / ip address",
-                                      port="5432",
-                                      database="db_name")
+                                    password="password",
+                                    host="localhost / ip address",
+                                    port="5432",
+                                    database="db_name")
         connection.autocommit = True
         # creating global cursor for database operations
         global cursor
         cursor = connection.cursor()
         # logs success statement after connection established
-        logging.info("Successfully connected to Database.\n")
+        logging.info("Successfully connected to Database.")
         return connection, cursor
     except (Exception, Error) as error:
-        logging.error("Error while connecting to Irregularities Table in PostgreSQL", error)
+        logging.error("Error while connecting to Irregularities Table in PostgreSQL: {}".format(error))
         cursor.close()
         connection.close()
         logging.error("PostgreSQL Connection closed due to connection error")
 
-
 # logs a completed statement with the count of records insert into database
 def commit_statement(table, counter):
-    logging.info(table.title(), "updated. Count: ", counter, "\n") #double-check syntax for logging
-
+    logging.info('{} updated. Count: {}.'.format(table.title(), counter))
 
 def db_connection_close():
     # close cursor command, and close out database connection
     cursor.close()
     connection.close()
-    logging.info("All updates commmitted to database and connection closed.")
-
+    logging.info("All updates commmitted successfully to database and connection closed.")
 
 # function for when exceptions are raised to close out DB connection
 def db_exception(table):
     logging.error('EXCEPTION GIVEN DURING CONNECTION')
     cursor.close()
     connection.close()
-    logging.error("PostgreSQL Connection to", table.upper(), "is closed") #double-check logging syntax
-
+    logging.error("PostgreSQL Connection to {} is closed".format(table.upper()))
 
 # calls waze datafeed api and puts point data into postgres table called alerts
 def alertsCall():
-    alerts_url = ('waze_datafeed_url')
+    alerts_url = ('waze_alerts_url')
 
     json_to_dict(alerts_url)
     counter = 0
@@ -155,14 +144,13 @@ def alertsCall():
                     city, country, road_type, report_rating, uuid, confidence,reliability, no_thumbsup))
             counter += 1
         except (Exception, Error) as error:
-            logging.error("Error while executing SQL insert: ", error) #double-check logging syntax
+            logging.error("Error while executing SQL insert: {}".format(error))
             db_exception("alerts")
     commit_statement("alerts", counter)
 
-
 # calls waze datafeed api and puts jam linestring data into postgres table called detected_jams
 def jamsCall():
-    jams_url = ('waze_datafeed_url')
+    jams_url = ('waze_detected_jams_url')
 
     json_to_dict(jams_url)
     counter = 0
@@ -231,7 +219,7 @@ def jamsCall():
             turn_line = None
         turn_type = jam['turnType']
 
-        # SQL insert statement for waze alerts
+        # SQL insert statement for waze detected jams
         try:
             cursor.execute("""
                 INSERT INTO w4c.detected_jams (
@@ -261,15 +249,14 @@ def jamsCall():
                     turn_line, turn_type))
             counter += 1
         except (Exception, Error) as error:
-            logging.error("Error while executing SQL insert: ", error) #double-check logging syntax
+            logging.error("Error while executing SQL insert: {}".format(error))
             db_exception("detected jams")
     commit_statement("jams", counter)
 
-
 # calls waze datafeed api and puts traffic irregularity linestring data into postgres table called irregularities
 def irregularitiesCall():
-    irregularities_url = ('waze_datafeed_url')
-
+    irregularities_url = ('waze_irregularities_url')
+    
     json_to_dict(irregularities_url)
     counter = 0
 
@@ -370,7 +357,7 @@ def irregularitiesCall():
             except:
                 no_thumbsup = None
 
-                # SQL insert statement for waze alerts
+        # SQL insert statement for waze irregularities
         try:
             cursor.execute("""
                 INSERT INTO w4c.irregularities (
@@ -404,17 +391,13 @@ def irregularitiesCall():
                               no_thumbsup))
             counter += 1
         except (Exception, Error) as error:
-            logging.error("Error while executing SQL insert: ", error) #double-check logging syntax
+            logging.error("Error while executing SQL insert: {}".format(error))
             db_exception("irregularities")
-
         commit_statement("irregularities", counter)
-
     except:
-        logging.info("No irregularities detected.\n")
-
+        logging.info("No irregularities detected.")
 
 ''' defining main '''
-
 
 def main():
     prog_start()
