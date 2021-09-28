@@ -19,7 +19,7 @@ create table w4c.alerts(
         magvar integer,
         alert_type varchar(25),
         subtype varchar(40),
-        report_description varchar(80), 
+        report_description varchar(500), 
         street varchar(80),
         city varchar(80),
         country varchar(2),

@@ -13,33 +13,25 @@ import psycopg2
 from psycopg2 import Error
 
 ''' variables '''
-#establishing logging config
+# establishing logging config
 logging.basicConfig(filename ='waze_ingestion.log',
-                    level = logging.INFO,
+                    level = logging.ERROR,
                     filemode ='a',
                     format = '%(asctime)s:%(levelname)s:%(message)s')
 
 ''' define functions '''
 
-# logs the execution of the script
-def prog_start():
-    logging.info("Initiating data ingestion & CRUD operations.")
-
-# logs the completion of the script
-def prog_end():
-    logging.info("Program operations completed.")
-
 # converts api response into json and then into a python dictionary
 def json_to_dict(url):
     api_response = requests.get(url)
-    responseAsJson = api_response.text
-    global responseAsDict
-    responseAsDict = json.loads(responseAsJson)
+    response_json = api_response.text
+    response_dict = json.loads(response_json)
+    return response_dict
 
 # establishes connection to postgis database with an autocommit connection
 def db_connection():
     try:
-        # global connection to PostgreSQL database
+        #connection to PostgreSQL database
         global connection
         connection = psycopg2.connect(user="user",
                                     password="password",
@@ -52,7 +44,7 @@ def db_connection():
         cursor = connection.cursor()
         # logs success statement after connection established
         logging.info("Successfully connected to Database.")
-        return connection, cursor
+        return cursor, connection
     except (Exception, Error) as error:
         logging.error("Error while connecting to PostgreSQL: {}".format(error))
         cursor.close()
@@ -77,13 +69,13 @@ def db_exception(table):
     logging.error("PostgreSQL Connection to {} is closed".format(table.upper()))
 
 # calls waze datafeed api and puts point data into postgres table called alerts
-def alertsCall():
-    alerts_url = ('waze_alerts_url')
+def alerts_call():
+    alerts_url = ('url')
 
-    json_to_dict(alerts_url)
+    response_dict = json_to_dict(alerts_url)
     counter = 0
 
-    for alert in responseAsDict['alerts']:
+    for alert in response_dict['alerts']:
 
         # establishing variables for SQL insert
         time_stamp = datetime.datetime.fromtimestamp(alert['pubMillis'] / 1000)
@@ -149,13 +141,13 @@ def alertsCall():
     commit_statement("alerts", counter)
 
 # calls waze datafeed api and puts jam linestring data into postgres table called detected_jams
-def jamsCall():
-    jams_url = ('waze_detected_jams_url')
+def jams_call():
+    jams_url = ('url')
 
-    json_to_dict(jams_url)
+    response_dict = json_to_dict(jams_url)
     counter = 0
 
-    for jam in responseAsDict['jams']:
+    for jam in response_dict['jams']:
 
         # establishing all of my variables for SQL insert statement
         id = jam['id']
@@ -208,7 +200,7 @@ def jamsCall():
         except:
             blocking_alert_uuid = None
         try:
-            for coordinate in responseAsDict['segments']:
+            for coordinate in response_dict['segments']:
                 geom_type = ('SRID=4326;LINESTRING(')
                 temp_geom = []
                 temp_coor = (str(coordinate['x']) + ' ' + str(coordinate['y']))
@@ -254,15 +246,15 @@ def jamsCall():
     commit_statement("jams", counter)
 
 # calls waze datafeed api and puts traffic irregularity linestring data into postgres table called irregularities
-def irregularitiesCall():
-    irregularities_url = ('waze_irregularities_url')
+def irregularities_call():
+    irregularities_url = ('url')
     
-    json_to_dict(irregularities_url)
+    response_dict = json_to_dict(irregularities_url)
     counter = 0
 
     try:
 
-        for irreg in responseAsDict['irregularities']:
+        for irreg in response_dict['irregularities']:
             # establish variables for SQL insert statement
             id = irreg['id']
 
@@ -400,14 +392,11 @@ def irregularitiesCall():
 ''' defining main '''
 
 def main():
-    prog_start()
     db_connection()
-    alertsCall()
-    jamsCall()
-    irregularitiesCall()
+    alerts_call()
+    jams_call()
+    irregularities_call()
     db_connection_close()
-    prog_end()
-
 
 ''' main execution '''
 if __name__ == "__main__":
