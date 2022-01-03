@@ -11,21 +11,12 @@ create table staging.alerts(
         time_stamp timestamp, 
         geom geometry(point, 4326),  --This may need to be 'geometry'
         magvar integer,
-<<<<<<< HEAD
         alert_type varchar,
         subtype varchar,
         report_description varchar, 
         street varchar,
         city varchar,
         country varchar,
-=======
-        alert_type varchar(25),
-        subtype varchar(40),
-        report_description varchar(500), 
-        street varchar(80),
-        city varchar(80),
-        country varchar(2),
->>>>>>> 71ebd30b0fc756901f9f2acafe5279e5c2a4581a
         road_type integer,
         report_rating integer,
         uuid varchar NOT NULL,
@@ -107,7 +98,8 @@ create table production.alerts(
         uuid varchar NOT NULL,
         confidence integer,
         reliability integer,
-        no_thumbsup integer 
+        no_thumbsup integer,
+        municipality varchar
 );
 
 /* Create Table for Waze Detected Jams */

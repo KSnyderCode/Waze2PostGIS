@@ -65,7 +65,11 @@ def alerts_call():
     response_dict = json_to_dict(alerts_url)
     #cursor = db_connection()
 
-    conditions = ["HAZARD_ON_ROAD", "HAZARD_ON_SHOULDER", "HAZARD_ON_SHOULDER_CAR_STOPPED", "HAZARD_ON_ROAD_CAR_STOPPED"]
+    conditions = (["HAZARD_ON_ROAD", "HAZARD_ON_SHOULDER", "HAZARD_ON_SHOULDER_CAR_STOPPED", "HAZARD_ON_ROAD_CAR_STOPPED",
+                "HAZARD_ON_ROAD_CAR_POT_HOLE", "HAZARD_ON_ROAD_CAR_ROAD_KILL", "HAZARD_ON_SHOULDER_ANIMALS",
+                "HAZARD_WEATHER_FOG", "HAZARD_WEATHER_HAIL","HAZARD_WEATHER_HEAVY_RAIN", "HAZARD_WEATHER_HEAVY_SNOW",
+                "HAZARD_WEATHER_HEAT_WAVE", "HAZARD_WEATHER_HURRICANE", "HAZARD_WEATHER_TORNADO","HAZARD_WEATHER_MONSOON",
+                "HAZARD_WEATHER_FREEZING_RAIN", "HAZARD_ON_ROAD_ICE","HAZARD_ON_ROAD_OIL"])
 
     for alert in response_dict['alerts']:
         filter = alert['subtype']
