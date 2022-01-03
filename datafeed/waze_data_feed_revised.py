@@ -4,92 +4,78 @@
 # waze_data_feed.py
 # Copyright 2021 Tri-County Regional Planning Commission
 
-
 ''' import modules / packages '''
-# note that "requests" is not a base module and will need to be installed with Conda (or whatever you use)
 import datetime
 import json
+import logging
 import requests
 import psycopg2
 from psycopg2 import Error
 
+''' variables '''
+# establishing logging config
+logging.basicConfig(filename ='waze_ingestion.log',
+                    level = logging.ERROR,
+                    filemode ='a',
+                    format = '%(asctime)s:%(levelname)s:%(message)s')
+
 ''' define functions '''
-
-
-# creates variables for starting a timestamp
-def ts_start():
-    global execute_time
-    execute_time = datetime.datetime.now()
-    print("Initiating CRUD Operations \nCurrent time: ", execute_time)
-
-
-# calculates elapsed time and prints timestamp
-def ts_end():
-    elapsed_time = datetime.datetime.now() - execute_time
-    print("\nTime to execute program: ", elapsed_time)
-
 
 # converts api response into json and then into a python dictionary
 def json_to_dict(url):
     api_response = requests.get(url)
-    responseAsJson = api_response.text
-    global responseAsDict
-    responseAsDict = json.loads(responseAsJson)
-
+    response_json = api_response.text
+    response_dict = json.loads(response_json)
+    return response_dict
 
 # establishes connection to postgis database with an autocommit connection
 def db_connection():
     try:
-        # global connection to PostgreSQL database
+        #connection to PostgreSQL database
         global connection
         connection = psycopg2.connect(user="user",
-                                      password="password",
-                                      host="localhost / ip address",
-                                      port="5432",
-                                      database="db_name")
+                                    password="password",
+                                    host="localhost / ip address",
+                                    port="5432",
+                                    database="db_name")
         connection.autocommit = True
         # creating global cursor for database operations
         global cursor
         cursor = connection.cursor()
-        # print database information after connection established
-        print("Successfully connected to Database.\n")
-        return connection, cursor
+        # logs success statement after connection established
+        logging.info("Successfully connected to Database.")
+        return cursor, connection
     except (Exception, Error) as error:
-        print('EXCEPTION GIVEN DURING CONNECTION')
-        print("Error while connecting to Irregularities Table in PostgreSQL", error)
+        logging.error("Error while connecting to PostgreSQL: {}".format(error))
         cursor.close()
         connection.close()
-        print("PostgreSQL Connection is closed")
+        logging.error("PostgreSQL Connection closed due to connection error")
 
-
-# prints a completed statement with the count of records insert into database
+# logs a completed statement with the count of records insert into database
 def commit_statement(table, counter):
-    print(table.title(), "updated. Count: ", counter, "\n")
-
+    logging.info('{} updated. Count: {}.'.format(table.title(), counter))
 
 def db_connection_close():
     # close cursor command, and close out database connection
     cursor.close()
     connection.close()
-    print("All updates commmitted to database and connection closed.")
-
+    logging.info("All updates commmitted successfully to database and connection closed.")
 
 # function for when exceptions are raised to close out DB connection
 def db_exception(table):
-    print('EXCEPTION GIVEN DURING CONNECTION')
+    logging.error('EXCEPTION GIVEN DURING CONNECTION')
     cursor.close()
     connection.close()
-    print("PostgreSQL Connection to", table.upper(), "is closed")
-
+    logging.error("PostgreSQL Connection to {} is closed".format(table.upper()))
 
 # calls waze datafeed api and puts point data into postgres table called alerts
-def alertsCall():
-    alerts_url = ('waze_datafeed_url')
+def alerts_call():
+    alerts_url = ('url')
 
-    json_to_dict(alerts_url)
+    response_dict = json_to_dict(alerts_url)
     counter = 0
 
-    for alert in responseAsDict['alerts']:
+    for alert in response_dict['alerts']:
 
         # establishing variables for SQL insert
         time_stamp = datetime.datetime.fromtimestamp(alert['pubMillis'] / 1000)
@@ -150,19 +136,18 @@ def alertsCall():
                     city, country, road_type, report_rating, uuid, confidence,reliability, no_thumbsup))
             counter += 1
         except (Exception, Error) as error:
-            print("Error while executing SQL insert: ", error)
+            logging.error("Error while executing SQL insert: {}".format(error))
             db_exception("alerts")
     commit_statement("alerts", counter)
 
-
 # calls waze datafeed api and puts jam linestring data into postgres table called detected_jams
-def jamsCall():
-    jams_url = ('waze_datafeed_url')
+def jams_call():
+    jams_url = ('url')
 
-    json_to_dict(jams_url)
+    response_dict = json_to_dict(jams_url)
     counter = 0
 
-    for jam in responseAsDict['jams']:
+    for jam in response_dict['jams']:
 
         # establishing all of my variables for SQL insert statement
         id = jam['id']
@@ -215,7 +200,7 @@ def jamsCall():
         except:
             blocking_alert_uuid = None
         try:
-            for coordinate in responseAsDict['segments']:
+            for coordinate in response_dict['segments']:
                 geom_type = ('SRID=4326;LINESTRING(')
                 temp_geom = []
                 temp_coor = (str(coordinate['x']) + ' ' + str(coordinate['y']))
@@ -226,7 +211,7 @@ def jamsCall():
             turn_line = None
         turn_type = jam['turnType']
 
-        # SQL insert statement for waze alerts
+        # SQL insert statement for waze detected jams
         try:
             cursor.execute("""
                 INSERT INTO w4c.detected_jams (
@@ -256,21 +241,20 @@ def jamsCall():
                     turn_line, turn_type))
             counter += 1
         except (Exception, Error) as error:
-            print("Error while executing SQL insert: ", error)
+            logging.error("Error while executing SQL insert: {}".format(error))
             db_exception("detected jams")
     commit_statement("jams", counter)
 
-
 # calls waze datafeed api and puts traffic irregularity linestring data into postgres table called irregularities
-def irregularitiesCall():
-    irregularities_url = ('waze_datafeed_url')
-
-    json_to_dict(irregularities_url)
+def irregularities_call():
+    irregularities_url = ('url')
+    
+    response_dict = json_to_dict(irregularities_url)
     counter = 0
 
     try:
 
-        for irreg in responseAsDict['irregularities']:
+        for irreg in response_dict['irregularities']:
             # establish variables for SQL insert statement
             id = irreg['id']
 
@@ -365,7 +349,7 @@ def irregularitiesCall():
             except:
                 no_thumbsup = None
 
-                # SQL insert statement for waze alerts
+        # SQL insert statement for waze irregularities
         try:
             cursor.execute("""
                 INSERT INTO w4c.irregularities (
@@ -399,27 +383,20 @@ def irregularitiesCall():
                               no_thumbsup))
             counter += 1
         except (Exception, Error) as error:
-            print("Error while executing SQL insert: ", error)
+            logging.error("Error while executing SQL insert: {}".format(error))
             db_exception("irregularities")
-
         commit_statement("irregularities", counter)
-
     except:
-        print("No irregularities detected.\n")
-
+        logging.info("No irregularities detected.")
 
 ''' defining main '''
 
-
 def main():
-    ts_start()
     db_connection()
-    alertsCall()
-    jamsCall()
-    irregularitiesCall()
+    alerts_call()
+    jams_call()
+    irregularities_call()
     db_connection_close()
-    ts_end()
-
 
 ''' main execution '''
 if __name__ == "__main__":
