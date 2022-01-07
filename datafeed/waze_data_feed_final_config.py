@@ -60,7 +60,7 @@ def db_exception(table):
 
 # calls waze datafeed api and puts point data into postgres table called alerts
 def alerts_call():
-    alerts_url = ('https://www.waze.com/partnerhub-api/waze-feed-access-token/d6676f4f-6f8c-4358-8a09-1a7410aeee7e?format=1')
+    alerts_url = ()
 
     response_dict = json_to_dict(alerts_url)
     #cursor = db_connection()
@@ -132,7 +132,7 @@ def alerts_call():
 
 # calls waze datafeed api and puts jam linestring data into postgres table called detected_jams
 def jams_call():
-    jams_url = ('https://www.waze.com/partnerhub-api/waze-feed-access-token/d6676f4f-6f8c-4358-8a09-1a7410aeee7e?format=1')
+    jams_url = ()
 
     response_dict = json_to_dict(jams_url)
     #cursor = db_connection()
@@ -234,7 +234,7 @@ def jams_call():
 
 # calls waze datafeed api and puts traffic irregularity linestring data into postgres table called irregularities
 def irregularities_call():
-    irregularities_url = ('https://www.waze.com/partnerhub-api/waze-feed-access-token/d6676f4f-6f8c-4358-8a09-1a7410aeee7e?format=1')
+    irregularities_url = ()
     
     response_dict = json_to_dict(irregularities_url)
     #cursor = db_connection()
