@@ -83,7 +83,6 @@ SET search_path TO production,public;
 
 /* Create Tables for Waze Alerts */
 create table production.alerts(
-        pk bigserial PRIMARY KEY, 
         time_stamp timestamp, 
         geom geometry(point, 4326),  --This may need to be 'geometry'
         magvar integer,
@@ -99,12 +98,12 @@ create table production.alerts(
         confidence integer,
         reliability integer,
         no_thumbsup integer,
-        municipality varchar
+        municipality varchar,
+        county varchar
 );
 
 /* Create Table for Waze Detected Jams */
 create table production.detected_jams(
-        pk BIGSERIAL PRIMARY KEY,
         id bigint,
         time_stamp timestamp,
         geom geometry(linestring, 4326), --this may need to be geometry
@@ -129,7 +128,6 @@ create table production.detected_jams(
 
 /* Create Table for Waze Irregularities */
 create table production.irregularities(
-        pk bigserial PRIMARY KEY,
         id bigint, --double check
         geom geometry, 
         detection_date timestamp,

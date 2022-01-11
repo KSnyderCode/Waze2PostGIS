@@ -1,5 +1,5 @@
 INSERT INTO production.alerts
-SELECT time_stamp, 
+SELECT  time_stamp, 
         geom,
         magvar,
         alert_type,
@@ -42,7 +42,7 @@ SELECT  id,
         turn_type
 FROM staging.detected_jams AS staging
 WHERE NOT EXISTS (
-    SELECT * FROM production.alerts AS production
+    SELECT * FROM production.detected_jams AS production
     WHERE staging.uuid = production.uuid);
 
 INSERT INTO production.irregularities
@@ -69,7 +69,7 @@ SELECT  id,
         drivers_count, 
         alerts_count,
         no_thumbsup
-FROM staging.detected_jams AS staging
+FROM staging.irregularities AS staging
 WHERE NOT EXISTS (
-    SELECT * FROM production.alerts AS production
-    WHERE staging.uuid = production.uuid);
+    SELECT * FROM production.irregularities AS production
+    WHERE staging.id = production.id and staging.update_date = production.update_date); 

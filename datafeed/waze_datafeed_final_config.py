@@ -28,11 +28,11 @@ def db_connection():
     try:
         #connection to PostgreSQL database
         global connection
-        connection = psycopg2.connect(user="kyle",
-                                     password = "password",
-                                     host="172.17.0.3",
-                                     port="5432",
-                                     database="waze2postgis")
+        connection = psycopg2.connect(user="user",
+                                    password="password",
+                                    host="localhost / ip address",
+                                    port="5432",
+                                    database="db_name")
         connection.autocommit = True
         # creating global cursor for database operations
         global cursor
@@ -60,7 +60,7 @@ def db_exception(table):
 
 # calls waze datafeed api and puts point data into postgres table called alerts
 def alerts_call():
-    alerts_url = ('https://www.waze.com/partnerhub-api/waze-feed-access-token/d6676f4f-6f8c-4358-8a09-1a7410aeee7e?format=1')
+    alerts_url = ('waze_API_url')
 
     response_dict = json_to_dict(alerts_url)
     #cursor = db_connection()
@@ -69,7 +69,8 @@ def alerts_call():
                 "HAZARD_ON_ROAD_CAR_POT_HOLE", "HAZARD_ON_ROAD_CAR_ROAD_KILL", "HAZARD_ON_SHOULDER_ANIMALS",
                 "HAZARD_WEATHER_FOG", "HAZARD_WEATHER_HAIL","HAZARD_WEATHER_HEAVY_RAIN", "HAZARD_WEATHER_HEAVY_SNOW",
                 "HAZARD_WEATHER_HEAT_WAVE", "HAZARD_WEATHER_HURRICANE", "HAZARD_WEATHER_TORNADO","HAZARD_WEATHER_MONSOON",
-                "HAZARD_WEATHER_FREEZING_RAIN", "HAZARD_ON_ROAD_ICE","HAZARD_ON_ROAD_OIL"])
+                "HAZARD_WEATHER_FREEZING_RAIN", "HAZARD_ON_ROAD_ICE","HAZARD_ON_ROAD_OIL", "HAZARD_ON_ROAD_OBJECT", 
+                "HAZARD_ON_ROAD_ROAD_KILL", "" ])
 
     for alert in response_dict['alerts']:
         filter = alert['subtype']
@@ -136,7 +137,7 @@ def alerts_call():
 
 # calls waze datafeed api and puts jam linestring data into postgres table called detected_jams
 def jams_call():
-    jams_url = ('https://www.waze.com/partnerhub-api/waze-feed-access-token/d6676f4f-6f8c-4358-8a09-1a7410aeee7e?format=1')
+    jams_url = ('waze_API_url')
 
     response_dict = json_to_dict(jams_url)
     #cursor = db_connection()
@@ -238,7 +239,7 @@ def jams_call():
 
 # calls waze datafeed api and puts traffic irregularity linestring data into postgres table called irregularities
 def irregularities_call():
-    irregularities_url = ('https://www.waze.com/partnerhub-api/waze-feed-access-token/d6676f4f-6f8c-4358-8a09-1a7410aeee7e?format=1')
+    irregularities_url = ('waze_API_url')
     
     response_dict = json_to_dict(irregularities_url)
     #cursor = db_connection()
