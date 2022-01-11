@@ -11,21 +11,12 @@ create table staging.alerts(
         time_stamp timestamp, 
         geom geometry(point, 4326),  --This may need to be 'geometry'
         magvar integer,
-<<<<<<< HEAD
         alert_type varchar,
         subtype varchar,
         report_description varchar, 
         street varchar,
         city varchar,
         country varchar,
-=======
-        alert_type varchar(25),
-        subtype varchar(40),
-        report_description varchar(500), 
-        street varchar(80),
-        city varchar(80),
-        country varchar(2),
->>>>>>> 71ebd30b0fc756901f9f2acafe5279e5c2a4581a
         road_type integer,
         report_rating integer,
         uuid varchar NOT NULL,
@@ -92,7 +83,6 @@ SET search_path TO production,public;
 
 /* Create Tables for Waze Alerts */
 create table production.alerts(
-        pk bigserial PRIMARY KEY, 
         time_stamp timestamp, 
         geom geometry(point, 4326),  --This may need to be 'geometry'
         magvar integer,
@@ -107,12 +97,13 @@ create table production.alerts(
         uuid varchar NOT NULL,
         confidence integer,
         reliability integer,
-        no_thumbsup integer 
+        no_thumbsup integer,
+        municipality varchar,
+        county varchar
 );
 
 /* Create Table for Waze Detected Jams */
 create table production.detected_jams(
-        pk BIGSERIAL PRIMARY KEY,
         id bigint,
         time_stamp timestamp,
         geom geometry(linestring, 4326), --this may need to be geometry
@@ -137,7 +128,6 @@ create table production.detected_jams(
 
 /* Create Table for Waze Irregularities */
 create table production.irregularities(
-        pk bigserial PRIMARY KEY,
         id bigint, --double check
         geom geometry, 
         detection_date timestamp,
