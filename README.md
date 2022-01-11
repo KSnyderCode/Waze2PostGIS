@@ -8,29 +8,34 @@ This project is meant to serve to download data from the Waze For Cities datafee
 The general overview of the script implementation is as follows:
 1. Create Postgres Database (manually)
 2. Run database initialization script
-3. Run the datafeed script through CRON every X minutes. 
-4. Run the duplicate removal script through CRON every X+1 minutes. 
+3. Execute script for all of the trigger functions to be added into the production schema. 
+4. Run the datafeed script through CRON every X minutes. 
+5. Run the production_rollover.sql script as needed.  
 
 ### Flow of the "datafeed" script
 
-1. Prints opening statement and initiates a timestamp
-2. Establishes an autocommit database connection to the PostgreSQL/PostGIS database you created
-3. Performs an API call, converts it from JSON to python dictionary, and then inserts into the database
+1. Establishes an autocommit database connection to the PostgreSQL/PostGIS database you created
+2. Performs an API call, converts it from JSON to python dictionary, and then inserts into the database
     - This does this 3 times for each different layer in the Waze API:
         - Alerts (User generated incidents) which are POINT geometries
         - Detected traffic jams which are LINESTRING geometries
         - Traffic Irregularities which are LINESTRING geometries
+3. Removes duplicate records in the staging tables. 
 4. Closes database connection and psycopg2 cursor
 5. Prints final time stamp
 
+### Data Rollover
 
-### Flow of the "duplicate removal" script
+- I've created two database schemas now to hopefully remove any potential issues with database locks. 
+- "Staging" is the temporary set of tables which is being updated every 5 minutes by the data feed python script. 
+- "Production" is intended to be a more static data set for interaction with GIS and PowerBI (or whatever else you'd like)
+- The "Production_Rollover.sql" script is a large INSERT statement to take data from the staging schema and roll it into the production schema. 
+    - Currently this is a mannual process, but now the user can determine when production gets updated. 
 
-1. Prints opening statement and initiates a timestamp
-2. Establishes an autocommit database connection to the PostgreSQL/PostGIS database you created
-3. Compares the Alerts and Detected Jams tables to a digital duplicate of each respective table deletes the more recent inputted version of any duplicate event based on the Waze UUID/ID. 
-4. Closes database connection and psycopg2 cursor
-5. Prints final time stamp
+### Trigger Functions
+
+- There are now trigger functions added into the database which use PostGIS functions (ST_Intersects and ST_StartPoint)
+    - These take the Alert Location or the Starting Point of a traffic Jam or Irregularity and updates columns in the respective table to allow for reporting / summarizing.
 
 ## Python Packages Required
 
@@ -44,14 +49,13 @@ This is a fairly "light" script in terms of packages required. I used the Anacon
 
 ## The future of this project
 
-This is a "first draft" of this project. I wanted to get this code out there for any other Waze For Cities Partners who are seeking a server based implementation. 
+This is a "working draft" of this project. I wanted to get this code out there for any other Waze For Cities Partners who are seeking a server based implementation. 
 
 I do have a few "future feature" items I'd like to add over time:
 
 1. Refactor code to increase readability and efficiency
-2. Create a Microsoft SQL Server version to increase compatible software
-3. Drop psycopg2 and use an Object Relational Mapper like SQLAlchemy
-
+2. Drop psycopg2 and use an Object Relational Mapper like SQLAlchemy
+3. Get more into PostGIS functions wherever possible. 
 
 
 ## Contributing to this project
