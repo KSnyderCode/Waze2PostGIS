@@ -30,7 +30,7 @@ The general overview of the script implementation is as follows:
 - "Staging" is the temporary set of tables which is being updated every 5 minutes by the data feed python script. 
 - "Production" is intended to be a more static data set for interaction with GIS and PowerBI (or whatever else you'd like)
 - The "Production_Rollover.sql" script is a large INSERT statement to take data from the staging schema and roll it into the production schema. 
-    - Currently this is a mannual process, but now the user can determine when production gets updated. 
+    - Currently this is a manual process, but now the user can determine when production gets updated. 
 
 ### Trigger Functions
 
