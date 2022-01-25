@@ -32,7 +32,7 @@ def db_connection():
                                     password="password",
                                     host="localhost / ip address",
                                     port="5432",
-                                    database="db_name")
+                                    database="database")
         connection.autocommit = True
         # creating global cursor for database operations
         global cursor
@@ -60,7 +60,7 @@ def db_exception(table):
 
 # calls waze datafeed api and puts point data into postgres table called alerts
 def alerts_call():
-    alerts_url = ('waze_API_url')
+    alerts_url = ('waze_traffic_data_api_url')
 
     response_dict = json_to_dict(alerts_url)
     #cursor = db_connection()
@@ -137,7 +137,7 @@ def alerts_call():
 
 # calls waze datafeed api and puts jam linestring data into postgres table called detected_jams
 def jams_call():
-    jams_url = ('waze_API_url')
+    jams_url = ('waze_traffic_data_api_url')
 
     response_dict = json_to_dict(jams_url)
     #cursor = db_connection()
@@ -239,7 +239,7 @@ def jams_call():
 
 # calls waze datafeed api and puts traffic irregularity linestring data into postgres table called irregularities
 def irregularities_call():
-    irregularities_url = ('waze_API_url')
+    irregularities_url = ('waze_traffic_data_api_url')
     
     response_dict = json_to_dict(irregularities_url)
     #cursor = db_connection()
@@ -376,15 +376,98 @@ def irregularities_call():
         except (Exception, Error) as error:
             db_exception("irregularities")
     except:
-        pass
+        return
+
+def route_irregularity_call():
+    route_url = ('waze_traffic_view_api_url')
+    response_dict = json_to_dict(route_url)
+
+    if response_dict['irregularities'] != []:
+        for route in response_dict['irregularities']:
+            try:
+                route_name = route['name']
+            except:
+                route_name = None
+            try:
+                to_name = route['toName']
+            except:
+                to_name = None
+            try:
+                from_name = route['fromName']
+            except:
+                from_name = None
+            try:
+                historic_time = route['historicTime']
+            except:
+                historic_time = None
+            try:
+                current_travel_time = route['time']
+            except:
+                current_travel_time = None
+            try:
+                jam_level = route['jamLevel']
+            except:
+                jam_level = None
+            try:
+                jam_length = route["length"]
+            except:
+                jam_length = None
+            try:
+                jam_length_ft = route["length"] * 3.2804
+            except:
+                jam_length_ft = None
+            try:
+                route_id = route['id']
+            except: 
+                route_id = None
+            try:
+                route_type = route['type']
+            except:
+                route_type = None
+            try:
+                geom_type = ('SRID=4326;LINESTRING(')
+                temp_geom = []
+                # for loop to convert X, Y pairs
+                for coordinate in route['line']:
+                    temp_coor = (str(coordinate['x']) + ' ' + str(coordinate['y']))
+                    temp_geom.append(temp_coor)
+                temp_geom_str = ', '.join([str(coor) for coor in temp_geom])
+                geom = geom_type + temp_geom_str + ')'
+            except:
+                geom = None
+            travel_time_index = round(current_travel_time / historic_time, 2)
+    
+        try:
+            cursor.execute("""
+                INSERT INTO staging.traffic_view_routes (
+                    route_name,
+                    to_name,
+                    from_name,
+                    historic_time,
+                    current_travel_time,
+                    jam_level,
+                    jam_length,
+                    jam_length_ft,
+                    route_id,
+                    route_type,
+                    travel_time_index,
+                    geom)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
+                    ,(route_name, to_name, from_name, historic_time, current_travel_time, jam_level, jam_length,
+                    jam_length_ft, route_id, route_type, travel_time_index, geom))
+        except (Exception, Error) as error:
+            db_exception("traffic_view_routes")
+    
+    else:
+        return
 
     
 def alert_duplicate():
     try:
         cursor.execute("""
             DELETE FROM
-                staging.alerts a
-            USING staging.alerts b
+                staging.alerts as a
+            USING staging.alerts as b
             WHERE
                 a.pk > b.pk
                 AND a.uuid = b.uuid;""")
@@ -396,11 +479,25 @@ def jam_duplicate():
     try:
         cursor.execute("""
             DELETE FROM
-	            staging.detected_jams a
-		    USING staging.detected_jams b
+	            staging.detected_jams as a
+		    USING staging.detected_jams as b
             WHERE
 	            a.pk > b.pk
 	            AND a.uuid = b.uuid;""")
+    except (Exception, Error) as error:
+        cursor.close()
+        connection.close()
+
+def traffic_view_duplicate():
+    try:
+        cursor.execute("""
+            DELETE FROM
+                staging.traffic_view_routes as  a
+            USING staging.traffic_view_routes as b
+            WHERE
+                a.pk > b.pk
+                AND a.route_id = b.route_id
+                AND a.current_travel_time = b.current_travel_time;""")
     except (Exception, Error) as error:
         cursor.close()
         connection.close()
@@ -412,8 +509,10 @@ def main():
     alerts_call()
     jams_call()
     irregularities_call()
+    route_irregularity_call()
     alert_duplicate()
     jam_duplicate()
+    traffic_view_duplicate()
     db_connection_close()
 
 ''' main execution '''
