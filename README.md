@@ -20,9 +20,9 @@ The general overview of the script implementation is as follows:
         - Alerts (User generated incidents) which are POINT geometries
         - Detected traffic jams which are LINESTRING geometries
         - Traffic Irregularities which are LINESTRING geometries
+        - Irregularities (Traffic View API) which are LINESTRING
 3. Removes duplicate records in the staging tables. 
 4. Closes database connection and psycopg2 cursor
-5. Prints final time stamp
 
 ### Data Rollover
 
@@ -34,8 +34,15 @@ The general overview of the script implementation is as follows:
 
 ### Trigger Functions
 
-- There are now trigger functions added into the database which use PostGIS functions (ST_Intersects and ST_StartPoint)
-    - These take the Alert Location or the Starting Point of a traffic Jam or Irregularity and updates columns in the respective table to allow for reporting / summarizing.
+- There are now trigger functions added into the database which use PostGIS functions:
+    - Municipal Boundary: these trigger functions take either the point geometry or the beginning of the line geometry
+    and run a spatial intersect to determine what municipality the feature is in 
+    - County Boundary: these trigger functions take either the point geometry or the beginning of the line geometry
+    and run a spatial intersect to determine what municipality the feature is in
+    - Azimuth calculation: This calculates an azimuth (ultimately in degrees) between the start and end of a line geometry to
+    determine an angle of travel.
+    - Travel Direction: For the alerts table, this is based entirely off of the *magvar* column. For the line features
+    the azimuth calculation is what determines the direction of travel. 
 
 ## Python Packages Required
 

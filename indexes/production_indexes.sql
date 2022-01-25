@@ -9,3 +9,7 @@ CREATE INDEX jams_geom_idx
 CREATE INDEX irreg_geom_idx
     ON production.irregularities
     USING GIST (geom);
+
+CREATE INDEX irreg_geom_idx
+    ON production.traffic_view_routes
+    USING GIST (geom);

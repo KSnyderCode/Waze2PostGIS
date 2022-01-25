@@ -54,7 +54,7 @@ create table staging.detected_jams(
 create table staging.irregularities(
         pk bigserial PRIMARY KEY,
         id bigint, --double check
-        geom geometry, 
+        geom geometry(linestring, 4326), 
         detection_date timestamp,
         update_date varchar(50),
         irregularity_type varchar(15),
@@ -78,6 +78,23 @@ create table staging.irregularities(
         no_thumbsup integer 
 );
 
+-- Create table script for traffic view API irregularities
+create table staging.traffic_view_routes(
+        pk bigserial PRIMARY KEY,
+        route_name varchar,
+        to_name varchar,
+        from_name varchar,
+        historic_time integer,
+        current_travel_time varchar,
+        jam_level integer,
+        jam_length integer,
+        jam_length_ft float,
+        route_id integer,
+        route_type varchar,
+        travel_time_index float,
+        geom geometry(linestring, 4326)
+);
+
 CREATE SCHEMA if not exists production;
 SET search_path TO production,public;
 
@@ -99,7 +116,8 @@ create table production.alerts(
         reliability integer,
         no_thumbsup integer,
         municipality varchar,
-        county varchar
+        county varchar,
+        travel_dir varchar
 );
 
 /* Create Table for Waze Detected Jams */
@@ -123,7 +141,11 @@ create table production.detected_jams(
         uuid varchar NOT NULL, --bigint?
         blocking_alert_uuid varchar, 
         turn_line geometry(linestring, 4326), --double check, needs to be pairs of coordinates
-        turn_type varchar
+        turn_type varchar,
+        jam_muni varchar,
+        jam_county varchar,
+        travel_dir varchar
+        travel_azimuth integer
 );
 
 /* Create Table for Waze Irregularities */
@@ -150,6 +172,29 @@ create table production.irregularities(
         highway varchar, --changed from boolean to varchar 
         drivers_count integer, 
         alerts_count integer,
-        no_thumbsup integer 
+        no_thumbsup integer,
+        irreg_muni varchar,
+        irreg_county varchar,
+        travel_dir varchar,
+        travel_azimuth integer
+);
+
+create table production.traffic_view_routes(
+        route_name varchar,
+        to_name varchar,
+        from_name varchar,
+        historic_time integer,
+        current_travel_time varchar,
+        jam_level integer,
+        jam_length integer,
+        jam_length_ft float,
+        route_id integer,
+        route_type varchar,
+        travel_time_index float,
+        geom geometry(linestring, 4326),
+        route_muni varchar,
+        route_county varchar,
+        travel_azimuth integer,
+        travel_dir varchar
 );
 
